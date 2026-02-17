@@ -100,23 +100,39 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzG6T0RvVrMb5
 
 let seatingData = [];
 
-fetch(sheetURL)
-  .then(response => response.text())
-  .then(data => {
+async function loadData() {
+  try {
+    const response = await fetch(sheetURL);
+    const data = await response.text();
+
     const rows = data.split("\n").slice(1);
+
     rows.forEach(row => {
       const columns = row.split(",");
-      if(columns.length >= 2){
+      if (columns.length >= 2) {
         seatingData.push({
           name: columns[0].trim().toLowerCase(),
           table: columns[1].trim()
         });
       }
     });
-  });
+
+  } catch (error) {
+    console.error("Error loading sheet:", error);
+  }
+}
+
+loadData();
 
 function findSeat() {
   const inputName = document.getElementById("nameInput").value.trim().toLowerCase();
+
+  if (seatingData.length === 0) {
+    document.getElementById("result").innerHTML =
+      "Loading guest list... Please try again in a moment.";
+    return;
+  }
+
   const guest = seatingData.find(g => g.name === inputName);
 
   if (guest) {
