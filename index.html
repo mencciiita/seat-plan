@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 
@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Open+Sans+Condensed:wght@300;700&display=swap" rel="stylesheet">
 
 <style>
-
 body {
   margin: 0;
   background-color: #FAEFD1;
@@ -36,7 +35,7 @@ h1 {
 }
 
 .subtitle {
-  font-family: 'The Youngest Serif', serif;
+  font-family: 'Cinzel Decorative', serif;
   font-size: 16px;
   margin-bottom: 30px;
   color: #53683B;
@@ -80,9 +79,9 @@ button:hover {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -96,61 +95,65 @@ button:hover {
 </div>
 
 <script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzG6T0RvVrMb5bUfVfZVoxhv3F89J_zmStjTGwEl3NVZsrTYmOw647jmIWOHlE9OPqu95o4rRk_ljA/pub?output=csv";
+const sheetURL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vSzG6T0RvVrMb5bUfVfZVoxhv3F89J_zmStjTGwEl3NVZsrTYmOw647jmIWOHlE9OPqu95o4rRk_ljA/pub?output=csv";
 
 let seatingData = [];
+
+// Robust CSV parser (handles quotes)
+function parseCSV(text) {
+  const rows = text.split("\n").slice(1);
+  return rows.map(row => {
+    const matches = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+    if (!matches || matches.length < 2) return null;
+
+    return {
+      name: matches[0].replace(/"/g, "").trim().toLowerCase(),
+      table: matches[1].replace(/"/g, "").trim()
+    };
+  }).filter(Boolean);
+}
 
 async function loadData() {
   try {
     const response = await fetch(sheetURL);
-    const data = await response.text();
-
-    const rows = data.split("\n").slice(1);
-
-    rows.forEach(row => {
-      const columns = row.split(",");
-      if (columns.length >= 2) {
-        seatingData.push({
-          name: columns[0].replace(/\r/g, "").trim().toLowerCase(),
-          table: columns[1].replace(/\r/g, "").trim()
-        });
-      }
-    });
-
-    console.log("Loaded Data:", seatingData);
-  } catch (error) {
-    console.error("Error loading sheet:", error);
+    const text = await response.text();
+    seatingData = parseCSV(text);
+    console.log("Guest list loaded:", seatingData);
+  } catch (err) {
+    console.error("Failed to load guest list", err);
   }
 }
 
 loadData();
 
 function findSeat() {
-  const inputName = document.getElementById("nameInput").value.trim().toLowerCase();
+  const input = document.getElementById("nameInput").value.trim().toLowerCase();
+  const result = document.getElementById("result");
 
-  if (seatingData.length === 0) {
-    document.getElementById("result").innerHTML =
-      "Loading guest list... Please try again.";
+  if (!input) {
+    result.innerHTML = "Please enter your full name.";
     return;
   }
 
-  const guest = seatingData.find(g =>
-    g.name.includes(inputName)
-  );
+  if (seatingData.length === 0) {
+    result.innerHTML = "Loading guest list… please try again.";
+    return;
+  }
+
+  const guest = seatingData.find(g => g.name === input);
 
   if (guest) {
-    document.getElementById("result").innerHTML =
-      "Welcome <strong>" + guest.name.toUpperCase() +
-      "</strong><br>You are seated at <strong>" + guest.table +
-      "</strong><br><br>See you on the dance floor 🥂";
+    result.innerHTML =
+      `Welcome <strong>${guest.name.toUpperCase()}</strong><br>
+       You are seated at <strong>${guest.table}</strong><br><br>
+       See you on the dance floor 🥂`;
   } else {
-    document.getElementById("result").innerHTML =
-      "We couldn't find your name.<br>Please check spelling.";
+    result.innerHTML =
+      "We couldn’t find your name.<br>Please check spelling.";
   }
 }
-
 </script>
 
 </body>
 </html>
-
