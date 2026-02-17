@@ -111,8 +111,8 @@ async function loadData() {
       const columns = row.split(",");
       if (columns.length >= 2) {
         seatingData.push({
-          name: columns[0].trim().toLowerCase(),
-          table: columns[1].trim()
+          name: columns[0].replace(/\r/g, "").trim().toLowerCase(),
+          table: columns[1].replace(/\r/g, "").trim()
         });
       }
     });
@@ -129,11 +129,13 @@ function findSeat() {
 
   if (seatingData.length === 0) {
     document.getElementById("result").innerHTML =
-      "Loading guest list... Please try again in a moment.";
+      "Loading guest list... Please try again.";
     return;
   }
 
-  const guest = seatingData.find(g => g.name === inputName);
+  const guest = seatingData.find(g =>
+    g.name.includes(inputName)
+  );
 
   if (guest) {
     document.getElementById("result").innerHTML =
@@ -142,9 +144,10 @@ function findSeat() {
       "</strong><br><br>See you on the dance floor 🥂";
   } else {
     document.getElementById("result").innerHTML =
-      "We couldn't find your name.<br>Please check the spelling.";
+      "We couldn't find your name.<br>Please check spelling.";
   }
 }
+
 </script>
 
 </body>
